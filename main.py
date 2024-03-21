@@ -11,7 +11,7 @@ from jinja2 import Environment, FileSystemLoader
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 
-URI = "mongodb://mongodb:27017"
+URI = "mongodb://127.0.0.1:27017"
 BASE_DIR = Path(__file__).parent
 BUFFER_SIZE = 1024
 HTTP_PORT = 8080
