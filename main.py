@@ -5,20 +5,18 @@ import logging
 from urllib.parse import urlparse, unquote_plus
 from pathlib import Path
 from http.server import HTTPServer, BaseHTTPRequestHandler
-from threading import Thread
-
-from jinja2 import Environment, FileSystemLoader
+from multiprocessing import Process
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
+from datetime import datetime
 
-URI = "mongodb://127.0.0.1:3000"
+URI = "mongodb://127.0.0.1:27017"
 BASE_DIR = Path(__file__).parent
 BUFFER_SIZE = 1024
-HTTP_PORT = 8080
+HTTP_PORT = 3000
 HTTP_HOST = '0.0.0.0'
 SOCKET_HOST = '127.0.0.1'
-SOCKET_PORT = 4000
-jinja = Environment(loader=FileSystemLoader(BASE_DIR.joinpath("templates")))
+SOCKET_PORT = 5000
 
 
 class CatFramework(BaseHTTPRequestHandler):
@@ -27,16 +25,14 @@ class CatFramework(BaseHTTPRequestHandler):
         match router:
             case "/":
                 self.send_html("index.html")
-            case "/contact":
-                self.send_html("contact.html")
-            case "/blog":
-                self.render_template("blog.jinja")
+            case "/message":
+                self.send_html("message.html")
             case _:
                 file = BASE_DIR.joinpath(router[1:])
                 if file.exists():
                     self.send_static(file)
                 else:
-                    self.send_html("404.html", 404)
+                    self.send_html("error.html", 404)
 
     def do_POST(self):
         size = self.headers.get("Content-Length")
@@ -58,18 +54,6 @@ class CatFramework(BaseHTTPRequestHandler):
         with open(filename, "rb") as f:
             self.wfile.write(f.read())
 
-    def render_template(self, filename, status=200):
-        self.send_response(status)
-        self.send_header("Content-type", "text/html")
-        self.end_headers()
-
-        with open('db/data.json', 'r', encoding='utf-8') as f:
-            content = json.load(f)
-
-        template = jinja.get_template(filename)
-        html = template.render(content=content, title="Блог").encode()
-        self.wfile.write(html)
-
     def send_static(self, filename, status=200):
         self.send_response(status)
         mimetype = mimetypes.guess_type(filename)[0] if mimetypes.guess_type(filename)[0] else "text/plain"
@@ -85,6 +69,7 @@ def save_data(data):
     parse_data = unquote_plus(data.decode())
     try:
         parse_data = {key: value for key, value in [el.split("=") for el in parse_data.split("&")]}
+        parse_data['date'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
         db.messages.insert_one(parse_data)
     except ValueError as e:
         logging.error(f"Parse error: {e}")
@@ -123,9 +108,9 @@ def run_socket_server():
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(threadName)s - %(message)s")
-    http_thread = Thread(target=run_http_server, name="http_server")
-    http_thread.start()
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(processName)s - %(message)s")
+    http_process = Process(target=run_http_server, name="http_server")
+    http_process.start()
 
-    socket_thread = Thread(target=run_socket_server, name="socket_server")
-    socket_thread.start()
+    socket_process = Process(target=run_socket_server, name="socket_server")
+    socket_process.start()
