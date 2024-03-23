@@ -19,7 +19,7 @@ SOCKET_HOST = '127.0.0.1'
 SOCKET_PORT = 5000
 
 
-class CatFramework(BaseHTTPRequestHandler):
+class Homework(BaseHTTPRequestHandler):
     def do_GET(self):
         router = urlparse(self.path).path
         match router:
@@ -80,7 +80,7 @@ def save_data(data):
 
 
 def run_http_server():
-    httpd = HTTPServer((HTTP_HOST, HTTP_PORT), CatFramework)
+    httpd = HTTPServer((HTTP_HOST, HTTP_PORT), Homework)
     try:
         logging.info(f"Server started on http://{HTTP_HOST}:{HTTP_PORT}")
         httpd.serve_forever()
