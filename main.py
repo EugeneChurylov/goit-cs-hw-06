@@ -108,7 +108,6 @@ def run_socket_server():
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(processName)s - %(message)s")
     http_process = Process(target=run_http_server, name="http_server")
     http_process.start()
 
