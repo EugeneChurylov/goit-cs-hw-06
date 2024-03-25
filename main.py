@@ -10,7 +10,7 @@ from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 from datetime import datetime
 
-URI = "mongodb://127.0.0.1:27017"
+URI = "mongodb://mongodb:27017"
 BASE_DIR = Path(__file__).parent
 BUFFER_SIZE = 1024
 HTTP_PORT = 3000
